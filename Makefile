@@ -1,4 +1,4 @@
-.PHONY: up down build clean
+NAME = inception
 
 all:
 	build up
@@ -14,3 +14,5 @@ down:
 
 clean: down
 	docker system prune -f
+
+.PHONY: up down build clean
