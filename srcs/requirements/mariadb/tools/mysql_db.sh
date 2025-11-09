@@ -5,13 +5,7 @@ set -e
 mkdir -p /var/run/mysqld
 chown -R mysql:mysql /var/run/mysqld
 
-# Secret dosyasını kontrol et
-SECRET_FILE="/run/secrets/db_root_password"
-if [ ! -f "$SECRET_FILE" ]; then
-  echo "Root password secret not found at $SECRET_FILE!"
-  exit 1
-fi
-MYSQL_ROOT_PASSWORD=$(cat "$SECRET_FILE")
+DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-mysecretpassword}
 
 # Arka planda MariaDB'yi başlat
 mysqld_safe &
@@ -29,7 +23,7 @@ DB_USER=${DB_USER:-user}
 DB_PASSWORD=${DB_PASSWORD:-password}
 
 mysql <<-EOSQL
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PASSWORD}';
 CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;
 CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
 GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'%';
