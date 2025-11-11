@@ -1,14 +1,14 @@
 FROM debian:bullseye
 
 # 1. PHP-FPM ve Gerekli Paketleri Kurma
-RUN apt-get update && apt-get install -y \
-    php7.4-fpm \
-    php7.4-mysql \
+RUN apt-get update && apt-get install -y mariadb-client \
+    php-fpm \
+    php-mysql \
     php7.4-cli \
-    php7.4-curl \
-    php7.4-gd \
-    php7.4-mbstring \
-    php7.4-xml \
+    php-curl \
+    php-gd \
+    php-mbstring \
+    php-xml \
     wget \
     procps \
     && rm -rf /var/lib/apt/lists/*
