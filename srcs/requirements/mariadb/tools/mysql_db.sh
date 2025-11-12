@@ -2,23 +2,23 @@
 set -e
 
 # MariaDB data ve socket dizinlerini hazırla
-mkdir -p /var/run/mysqld
-mkdir -p /var/lib/mysql
-chown -R mysql:mysql /var/run/mysqld
-chown -R mysql:mysql /var/lib/mysql
+mkdir -p /var/run/mysqld /var/lib/mysql
+chown -R mysql:mysql /var/run/mysqld /var/lib/mysql
 
+# Secrets'den şifreleri oku
 DB_ROOT_PASSWORD=$(cat /run/secrets/db_root_password)
 DB_PASSWORD=$(cat /run/secrets/db_password)
-
-# Environment variables'dan değerleri al
 DB_NAME="${MYSQL_DATABASE}"
 DB_USER="${MYSQL_USER}"
 
 # Eğer MariaDB henüz initialize edilmemişse, initialize et
-if [ ! -d "/var/lib/mysql/mysql" ]; then
+if [ ! -f "/var/lib/mysql/.initialized" ]; then
     echo "Initializing MariaDB database..."
-    mysql_install_db --user=mysql --datadir=/var/lib/mysql
-    echo "MariaDB database initialized!"
+    
+    # MariaDB'yi initialize et (eğer mysql klasörü yoksa)
+    if [ ! -d "/var/lib/mysql/mysql" ]; then
+        mysql_install_db --user=mysql --datadir=/var/lib/mysql
+    fi
     
     # Geçici olarak skip-networking ile başlat
     mysqld --user=mysql --skip-networking --socket=/var/run/mysqld/mysqld.sock &
@@ -30,7 +30,6 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
         if mysqladmin ping --socket=/var/run/mysqld/mysqld.sock &>/dev/null; then
             break
         fi
-        echo "MariaDB connection attempt $((30-i))/30..."
         sleep 1
     done
     
@@ -39,7 +38,10 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
         exit 1
     fi
     
-    echo "MariaDB is now ready! Setting up database and users..."
+    echo "Setting up database and users..."
+    
+    # Environment variable'ları temizle (mysql komutunun çakışmaması için)
+    unset MYSQL_HOST MYSQL_TCP_PORT
     
     # Database ve user'ı oluştur
     mysql --socket=/var/run/mysqld/mysqld.sock -uroot <<-EOSQL
@@ -56,15 +58,13 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
 		FLUSH PRIVILEGES;
 	EOSQL
     
-    echo "Database ${DB_NAME} and user ${DB_USER} created successfully!"
+    echo "Database setup completed!"
     
     # Geçici MariaDB'yi kapat
-    if ! kill -s TERM "$pid" || ! wait "$pid"; then
-        echo >&2 "MariaDB initialization process failed"
-        exit 1
-    fi
+    kill -s TERM "$pid" && wait "$pid"
     
-    echo "Initialization complete!"
+    # Initialized flag'ini oluştur
+    touch /var/lib/mysql/.initialized
 fi
 
 # Normal modda MariaDB'yi başlat

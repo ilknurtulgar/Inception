@@ -31,6 +31,10 @@ RUN mkdir -p /var/www/html/wp
 COPY conf/wp_my.cnf /etc/php/7.4/fpm/pool.d/www.conf
 COPY tools/wordpress.sh /usr/local/bin/wordpress.sh
 
+# PHP-FPM için gerekli klasörleri oluştur
+RUN mkdir -p /run/php && \
+    chown www-data:www-data /run/php
+
 RUN chmod +x /usr/local/bin/wordpress.sh 
 #Script çalıştırma izni ver
 

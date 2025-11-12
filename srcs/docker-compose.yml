@@ -37,7 +37,6 @@ services:
     secrets:
       - db_password
       - db_root_password
-      - credentials
     restart: always
     depends_on:
       mariadb:
@@ -70,5 +69,3 @@ secrets:
     file: ../secrets/db_root_password.txt
   db_password:
     file: ../secrets/db_password.txt
-  credentials:
-    file: ../secrets/credentials.txt

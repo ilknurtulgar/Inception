@@ -13,5 +13,14 @@ down:
 
 clean: down
 	docker system prune -f
+	docker volume prune -f
 
-.PHONY: up down build clean
+fclean: clean
+	docker-compose -f srcs/docker-compose.yml down --rmi all --volumes --remove-orphans
+	docker system prune -a -f
+	sudo rm -rf /home/itulgar/data/mariadb/*
+	sudo rm -rf /home/itulgar/data/wordpress/*
+
+re: fclean all
+
+.PHONY: all build up down clean fclean re

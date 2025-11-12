@@ -1,36 +1,34 @@
 #!/bin/bash
 set -e
 
-if [ -f .env ]; then
-  export $(cat .env | xargs)  # .env dosyasındaki tüm değişkenleri al
-fi
-
+# Environment variables'ları oku
 DB_NAME=${MYSQL_DATABASE}
 DB_USER=${MYSQL_USER}
-DB_PASSWORD=$(cat /run/secrets/db_password 2>/dev/null || echo "${MYSQL_PASSWORD}")
-DB_ROOT_PASSWORD=$(cat /run/secrets/db_root_password 2>/dev/null || echo "${MYSQL_ROOT_PASSWORD}")
+DB_PASSWORD=$(cat /run/secrets/db_password)
+DB_ROOT_PASSWORD=$(cat /run/secrets/db_root_password)
 DB_HOST=${MYSQL_HOST}
-
 WP_ADMIN_USER=${WORDPRESS_ADMIN_USER}
 WP_ADMIN_EMAIL=${WORDPRESS_ADMIN_EMAIL}
-WP_ADMIN_PASS=$(cat /run/secrets/credentials 2>/dev/null || echo "${WORDPRESS_ADMIN_PASS}")
+WP_PASSWORD=${WORDPRESS_PASSWORD}
 DOMAIN_NAME=${DOMAIN_NAME}
-
 WP_PATH="/var/www/html/wp"
 
+# MariaDB'nin hazır olmasını bekle
 echo "Waiting for MariaDB to be ready..."
-MAX_TRIES=30
-COUNT=0
-until mysqladmin ping -h"$DB_HOST" -u"${DB_USER}" -p"${DB_PASSWORD}" --silent 2>/dev/null; do
-    COUNT=$((COUNT + 1))
-    if [ $COUNT -ge $MAX_TRIES ]; then
+for i in {1..30}; do
+    if mysqladmin ping -h"$DB_HOST" -u"root" -p"${DB_ROOT_PASSWORD}" --silent 2>/dev/null; then
+        echo "MariaDB is ready!"
+        break
+    fi
+    if [ $i -eq 30 ]; then
         echo "Error: MariaDB did not become ready in time"
         exit 1
     fi
-    echo "MariaDB connection attempt $COUNT/$MAX_TRIES..."
     sleep 2
 done
-echo "MariaDB is ready!"
+
+# MariaDB'nin initialization'ını tamamlaması için bekle
+sleep 3
 
 # WordPress core dosyalarını indir
 if [ ! -f "${WP_PATH}/wp-settings.php" ]; then
@@ -38,7 +36,7 @@ if [ ! -f "${WP_PATH}/wp-settings.php" ]; then
     wp core download --path="${WP_PATH}" --allow-root
 fi
 
-#WordPress Config Oluştur
+# WordPress Config oluştur
 if [ ! -f "${WP_PATH}/wp-config.php" ]; then
     echo "Creating wp-config.php..."
     wp config create \
@@ -51,15 +49,15 @@ if [ ! -f "${WP_PATH}/wp-config.php" ]; then
         --allow-root
 fi
 
-#WordPress Kurulumu
-if ! wp core is-installed --path="${WP_PATH}" --allow-root >/dev/null 2>&1; then
+# WordPress kurulumu
+if ! wp core is-installed --path="${WP_PATH}" --allow-root 2>/dev/null; then
     echo "Installing WordPress..."
     wp core install \
         --path="${WP_PATH}" \
         --url="https://${DOMAIN_NAME}" \
         --title="Inception WordPress" \
         --admin_user="${WP_ADMIN_USER}" \
-        --admin_password="${WP_ADMIN_PASS}" \
+        --admin_password="${WP_PASSWORD}" \
         --admin_email="${WP_ADMIN_EMAIL}" \
         --skip-email \
         --allow-root
@@ -67,5 +65,6 @@ else
     echo "WordPress already installed."
 fi
 
+# PHP-FPM'yi başlat
 echo "Starting php-fpm..."
-exec php-fpm -F
+exec php-fpm7.4 -F
