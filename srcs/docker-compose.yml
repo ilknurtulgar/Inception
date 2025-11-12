@@ -42,6 +42,22 @@ services:
       mariadb:
         condition: service_healthy
 
+  nginx:
+    container_name: nginx
+    build:
+      context: ./requirements/nginx
+      dockerfile: Dockerfile
+    image: nginx
+    ports:
+      - "443:443"
+    volumes:
+      - /home/itulgar/data/wordpress:/var/www/html
+    networks:
+      - inception
+    depends_on:
+      - wordpress
+    restart: always
+
 
 networks:
   inception:
