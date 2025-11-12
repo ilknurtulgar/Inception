@@ -5,9 +5,9 @@ set -e
 mkdir -p /var/run/mysqld /var/lib/mysql
 chown -R mysql:mysql /var/run/mysqld /var/lib/mysql
 
-# Secrets'den şifreleri oku
-DB_ROOT_PASSWORD=$(cat /run/secrets/db_root_password)
-DB_PASSWORD=$(cat /run/secrets/db_password)
+# Environment variables'dan şifreleri oku
+DB_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}"
+DB_PASSWORD="${MYSQL_PASSWORD}"
 DB_NAME="${MYSQL_DATABASE}"
 DB_USER="${MYSQL_USER}"
 

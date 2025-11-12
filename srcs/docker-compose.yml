@@ -9,9 +9,6 @@ services:
       - mariadb_data:/var/lib/mysql  # Container içinde kendi veritabanı data klasörünü oluşturur
     env_file: 
       - .env
-    secrets:
-      - db_root_password
-      - db_password
     networks:
       - inception
     restart: always
@@ -34,9 +31,6 @@ services:
       - inception
     env_file:
       - .env
-    secrets:
-      - db_password
-      - db_root_password
     restart: always
     depends_on:
       mariadb:
@@ -79,9 +73,3 @@ volumes:
       type: none
       device: /home/itulgar/data/mariadb
       o: bind
-
-secrets:
-  db_root_password:
-    file: ../secrets/db_root_password.txt
-  db_password:
-    file: ../secrets/db_password.txt
