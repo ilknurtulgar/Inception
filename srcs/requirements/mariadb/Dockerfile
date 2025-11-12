@@ -16,5 +16,3 @@ RUN mkdir -p /var/run/mysqld && \
 
 EXPOSE 3306
 ENTRYPOINT ["/usr/local/bin/mysql_db.sh"]
-
-CMD ["mysqld_safe"]

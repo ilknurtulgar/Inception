@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     image: mariadb
     volumes:
-      - mariadb_data:/var/lib/mysql  # Container içinde kendi veritabanı data klasörünü oluşturur
+      - mariadb:/var/lib/mysql  # Container içinde kendi veritabanı data klasörünü oluşturur
     env_file: 
       - .env
     networks:
@@ -14,10 +14,10 @@ services:
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost --silent || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
   
   wordpress:
     container_name: wordpress
@@ -66,7 +66,7 @@ volumes:
       type: none
       device: /home/itulgar/data/wordpress
       o: bind
-  mariadb_data:
+  mariadb:
     name: mariadb
     driver: local
     driver_opts:
