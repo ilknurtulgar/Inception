@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     image: mariadb
     volumes:
-      - mariadb:/var/lib/mysql  # Container içinde kendi veritabanı data klasörünü oluşturur
+      - mariadb:/var/lib/mysql
     env_file: 
       - .env
     networks:
@@ -26,7 +26,7 @@ services:
       dockerfile: Dockerfile
     image: wordpress
     volumes:
-      - /home/itulgar/data/wordpress:/var/www/html
+      - wordpress:/var/www/html
     networks:
       - inception
     env_file:
@@ -45,7 +45,9 @@ services:
     ports:
       - "443:443"
     volumes:
-      - /home/itulgar/data/wordpress:/var/www/html
+      - wordpress:/var/www/html
+    env_file:
+      - .env
     networks:
       - inception
     depends_on:

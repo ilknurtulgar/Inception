@@ -5,13 +5,6 @@ set -e
 mkdir -p /var/run/mysqld /var/lib/mysql
 chown -R mysql:mysql /var/run/mysqld /var/lib/mysql
 
-# Environment variables'dan şifreleri oku
-DB_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}"
-DB_PASSWORD="${MYSQL_PASSWORD}"
-DB_NAME="${MYSQL_DATABASE}"
-DB_USER="${MYSQL_USER}"
-
-# Eğer MariaDB henüz initialize edilmemişse, initialize et
 if [ ! -f "/var/lib/mysql/.initialized" ]; then
     echo "Initializing MariaDB database..."
     
@@ -24,7 +17,6 @@ if [ ! -f "/var/lib/mysql/.initialized" ]; then
     mysqld --user=mysql --skip-networking --socket=/var/run/mysqld/mysqld.sock &
     pid="$!"
     
-    # Servisin hazır olmasını bekle
     echo "Waiting for MariaDB to be ready..."
     for i in {30..0}; do
         if mysqladmin ping --socket=/var/run/mysqld/mysqld.sock &>/dev/null; then
@@ -43,30 +35,26 @@ if [ ! -f "/var/lib/mysql/.initialized" ]; then
     # Environment variable'ları temizle (mysql komutunun çakışmaması için)
     unset MYSQL_HOST MYSQL_TCP_PORT
     
-    # Database ve user'ı oluştur
     mysql --socket=/var/run/mysqld/mysqld.sock -uroot <<-EOSQL
 		SET @@SESSION.SQL_LOG_BIN=0;
-		ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PASSWORD}';
-		CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '${DB_ROOT_PASSWORD}';
+		ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+		CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
 		GRANT ALL ON *.* TO 'root'@'%' WITH GRANT OPTION;
 		DELETE FROM mysql.user WHERE User='';
 		DROP DATABASE IF EXISTS test;
 		DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
-		CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;
-		CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
-		GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'%';
+		CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
+		CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
+		GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
 		FLUSH PRIVILEGES;
 	EOSQL
     
     echo "Database setup completed!"
     
-    # Geçici MariaDB'yi kapat
     kill -s TERM "$pid" && wait "$pid"
-    
-    # Initialized flag'ini oluştur
+
     touch /var/lib/mysql/.initialized
 fi
 
-# Normal modda MariaDB'yi başlat
 echo "Starting MariaDB..."
 exec mysqld --user=mysql --console

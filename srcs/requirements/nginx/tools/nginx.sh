@@ -12,7 +12,7 @@ if [ ! -f /etc/nginx/ssl/nginx.crt ]; then
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
         -keyout /etc/nginx/ssl/nginx.key \
         -out /etc/nginx/ssl/nginx.crt \
-        -subj "/C=TR/ST=Istanbul/L=Istanbul/O=42/OU=42/CN=localhost"
+        -subj "/C=TR/ST=Istanbul/L=Istanbul/O=42/OU=42/CN=${DOMAIN_NAME}"
     
     echo "SSL certificate generated."
 fi
@@ -27,7 +27,7 @@ fi
 echo "Setting up domain name: ${DOMAIN_NAME}"
 sed -i "s/DOMAIN_NAME/${DOMAIN_NAME}/g" /etc/nginx/nginx.conf
 
-# Nginx yapılandırmasını test et
+
 echo "Testing Nginx configuration..."
 nginx -t
 
