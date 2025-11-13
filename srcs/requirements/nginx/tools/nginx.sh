@@ -23,6 +23,10 @@ if [ ! -d /var/www/html/wp ]; then
     mkdir -p /var/www/html/wp
 fi
 
+# Domain name'i config'e yerleştir
+echo "Setting up domain name: ${DOMAIN_NAME}"
+sed -i "s/DOMAIN_NAME/${DOMAIN_NAME}/g" /etc/nginx/nginx.conf
+
 # Nginx yapılandırmasını test et
 echo "Testing Nginx configuration..."
 nginx -t

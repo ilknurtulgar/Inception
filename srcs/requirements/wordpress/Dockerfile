@@ -1,10 +1,10 @@
-FROM debian:bullseye
+FROM debian:bookworm
 
 # 1. PHP-FPM ve Gerekli Paketleri Kurma
 RUN apt-get update && apt-get install -y mariadb-client \
     php-fpm \
     php-mysql \
-    php7.4-cli \
+    php-cli \
     php-curl \
     php-gd \
     php-mbstring \
@@ -28,7 +28,7 @@ RUN mkdir -p /var/www/html/wp
 #     chmod -R 755 /var/www/html/wp
 
 # 5. Konfigürasyon Dosyalarını ve Script'i Kopyalama
-COPY conf/wp_my.cnf /etc/php/7.4/fpm/pool.d/www.conf
+COPY conf/wp_my.cnf /etc/php/8.2/fpm/pool.d/www.conf
 COPY tools/wordpress.sh /usr/local/bin/wordpress.sh
 
 # PHP-FPM için gerekli klasörleri oluştur
