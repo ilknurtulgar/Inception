@@ -35,7 +35,6 @@ if [ ! -f "${WORDPRESS_PATH}/wp-config.php" ]; then
         --allow-root
 fi
 
-# WordPress kurulumu
 if ! wp core is-installed --path="${WORDPRESS_PATH}" --allow-root 2>/dev/null; then
     echo "Installing WordPress..."
     wp core install \
@@ -51,7 +50,6 @@ else
     echo "WordPress already installed."
 fi
 
-# Editor kullanıcısı oluştur
 if ! wp user get "${WORDPRESS_EDITOR_USER}" --path="${WORDPRESS_PATH}" --allow-root >/dev/null 2>&1; then
     echo "Creating editor user..."
     wp user create "${WORDPRESS_EDITOR_USER}" "${WORDPRESS_EDITOR_EMAIL}" \
@@ -64,6 +62,5 @@ else
     echo "Editor user already exists."
 fi
 
-# PHP-FPM'yi başlat
 echo "Starting php-fpm..."
 exec php-fpm8.2 -F
